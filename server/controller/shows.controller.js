@@ -34,7 +34,7 @@ export const listShow = async (req, res) => {
     try {
         const response = await Show.aggregate([
             {
-                $match: { movie: new mongoose.Types.ObjectId("67348dd608346bb55b2a2c9a") }, // Use the variable directly
+                $match: { movie: new mongoose.Types.ObjectId(movieID) }, //Line of error
             },
             {
                 $match: {
