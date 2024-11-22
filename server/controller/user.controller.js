@@ -10,46 +10,47 @@ export const register = async(req, res) => {
 }
 
 export const login = async (req, res) => {
-    const {email, password} = req.body;
-    const userData = await User.findOne({ email : email.toLowerCase() }).select('+password');
-    if(!userData){
-        res.status(401).send({status: false, message: "Invalid credentials"});
-        return;
+    try{
+        const {email, password} = req.body;
+        const userData = await User.findOne({ email : email.toLowerCase() }).select('+password');
+        if(!userData){
+            res.status(401).send({status: false, message: "Invalid credentials"});
+            return;
+        }
+        if(!await bcrypt.compare(password,  userData.password)){
+            return res.status(401).send({status: false, message: "Invalid credentials"});
+        }
+
+        //Generate JWT token
+
+        const jwtToken =  await userData.generateJWTToken();
+
+        res.cookie('token', jwtToken,{
+            maxAge: 2 * 24 * 60 * 60 * 1000,
+        });
+
+        //Put JWT token in cookie
+        
+        res.status(200).send(
+            {status: true, message: "Successfully logged in!"}
+        )
+    }catch(error){
+        console.error("Error during login:", error);
+        res.status(500).send({ status: false, message: "Server error" });
     }
-    if(!bcrypt.compare(password,  userData.password)){
-        res.status(401).send({status: false, message: "Invalid credentials"});
-        return;
-    }
-
-    //Generate JWT token
-
-    const jwtToken =  await userData.generateJWTToken();
-
-    res.cookie('token', jwtToken,{
-        maxAge: 2 * 24 * 60 * 60 * 1000,
-    });
-
-    //Put JWT token in cookie
-    
-    res.status(200).send(
-        {status: true, message: "Successfully logged in!"}
-    )
-}
+};
 
 
 export const getProfile = async (req,res) => {
-    try{
-        const { token } = req.cookies;
-        if(!token){
-            return res.status(401).send({status : false, message: "No token provided!"});
-        }
 
-        const tokenDetails = jwt.verify(token, process.env.JWT_PASSWORD);
+    const userId = req.user.id;
 
-        const userDetail = await User.findById(tokenDetails.id);
+    const userDetail = await User.findById(userId);
 
-        res.status(200).send(userDetail)
-    }catch(error){
-        res.status(401).send({ status: false, message: "Invalid token!" });
+    if (!userDetail) {
+        return res.status(404).send({ status: false, message: "User not found" });
     }
+
+    res.status(200).send(userDetail)
+    
 };

@@ -41,7 +41,7 @@ const UserSchema = new Schema({
 UserSchema.methods = {
     generateJWTToken: function() {
         return jwt.sign(
-            { id: this._id },
+            { id: this._id, role: this.role },
             process.env.JWT_PASSWORD,
             {
                 expiresIn: process.env.JWT_EXPIRY || '2d'
