@@ -34,12 +34,12 @@ export const listShow = async (req, res) => {
     try {
         const response = await Show.aggregate([
             {
-                $match: { movie: new mongoose.Types.ObjectId(movieID) }, //Line of error
+                $match: { movie: new mongoose.Types.ObjectId(movieID) }, 
             },
             {
                 $match: {
                     datetime: {
-                        '$gte': new Date(`${movieDate}T00:00:00.000+00:00`),
+                        '$gte': new Date(`${movieDate}T00:00:00.000+00:00`),//getting error
                         '$lt': new Date(`${movieDate}T23:59:59.999+00:00`)
                     }
                 }
