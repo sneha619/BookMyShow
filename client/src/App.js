@@ -7,13 +7,12 @@ import { useSelector } from 'react-redux';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import ProtectedRoute from './Components/ProtectedRoute';
+import Admin from './pages/Admin';
+import Profile from './pages/Profile';
 
 function App() {
   const { loading } = useSelector((state) => state.loader);
   const { user } = useSelector((state)=> state.user);
-
-  console.log(loading);
-  console.log(user);
 
   return (
     <div>
@@ -50,6 +49,8 @@ function App() {
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>}/>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path='/admin' element={<ProtectedRoute><Admin/></ProtectedRoute>}/>
+          <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
         </Routes>
       </BrowserRouter>
     </div>

@@ -7,7 +7,8 @@ import { setUser } from '../redux/userSlice';
 import { Layout, Menu, message } from 'antd';
 import { Header } from 'antd/es/layout/layout';
 import { HomeOutlined, LogoutOutlined, ProfileOutlined, UserOutlined } from '@ant-design/icons';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
+import { Link } from 'react-router-dom';
 
 function ProtectedRoute({ children }) {
   const { user } = useSelector((state) => state.user);
@@ -31,7 +32,7 @@ function ProtectedRoute({ children }) {
 
       if (decodedToken.exp < currentTime) {
         console.log("Token is expired, redirecting to login");
-        localStorage.removeItem("token"); // Remove expired token
+        localStorage.removeItem("token"); 
         navigate("/login");
         return;
       }
@@ -65,17 +66,21 @@ function ProtectedRoute({ children }) {
       icon: <HomeOutlined />
     },
     {
-      label: 'User',
+      label: `${user?.name}`,
       icon: <UserOutlined />,
 
-      children : [
+      children: [
         {
-          label : 'Profile',
-          icon : <ProfileOutlined />
+          label: (
+            <span onClick={() => {user.isAdmin? navigate('/admin'): navigate('/profile')}}>
+             My Profile 
+            </span>
+          ),
+          icon: <ProfileOutlined />
         },
         {
-          label : 'Logout',
-          icon : <LogoutOutlined />
+          label: (<Link to='/login' onClick={() => localStorage.removeItem('token')}>Log Out</Link>),
+          icon: <LogoutOutlined />
         }
       ]
     }
