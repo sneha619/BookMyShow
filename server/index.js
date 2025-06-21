@@ -12,8 +12,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const userRoutes = require('./routes/userRoutes.js');
+const movieRoutes = require('./routes/movieRoutes.js');
+const theaterRoutes = require('./routes/theaterRoutes.js');
+const showRoutes = require('./routes/showRoutes.js');
+const bookingRoutes = require('./routes/bookingRoutes.js');
 
 app.use('/api/user', userRoutes);
+app.use('/api/movies', movieRoutes);
+app.use('/api/theaters', theaterRoutes);
+app.use('/api/shows', showRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.listen(PORT, ()=> {
     console.log('server started');

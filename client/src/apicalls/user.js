@@ -35,10 +35,15 @@ export const getCurrentUser = async () => {
       }
     });
 
+    if (!response.data || !response.data.user) {
+      console.warn("User data is missing or incomplete in the response");
+      return { success: false, message: "Invalid user data received" };
+    }
+
     return { success: true, data: response.data.user };
   } catch (error) {
-    console.error("Error fetching user:", error.response?.data || error.message); // Add this line to log the error details
-    return { success: false, message: error.response?.data?.message || "Error fetching user" };
+    console.error("Error fetching user:", error.response?.data || error.message);
+    return { success: false, message: error.response?.data?.message || "Error fetching current user" };
   }
 };
 

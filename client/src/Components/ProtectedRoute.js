@@ -40,13 +40,14 @@ function ProtectedRoute({ children }) {
       console.log("Calling getCurrentUser API");
       const response = await getCurrentUser();
 
-      if (response.success) {
+      if (response.success && response.data) {
         console.log("User data fetched successfully", response.data);
         dispatch(setUser(response.data));
       } else {
         console.log("Failed to fetch user data", response.message);
+        localStorage.removeItem("token"); // Remove invalid token
         dispatch(setUser(null));
-        message.error(response.message);
+        message.error(response.message || "Session expired. Please login again.");
         navigate("/login");
       }
     } catch (error) {
