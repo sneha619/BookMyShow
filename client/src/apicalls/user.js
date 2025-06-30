@@ -35,7 +35,9 @@ export const getCurrentUser = async () => {
       }
     });
 
-    if (!response.data || !response.data.user) {
+    console.log("API Response:", response.data);
+
+    if (!response.data || !response.data.success || !response.data.user) {
       console.warn("User data is missing or incomplete in the response");
       return { success: false, message: "Invalid user data received" };
     }

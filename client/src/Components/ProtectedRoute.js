@@ -1,8 +1,8 @@
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { showLoading, hideLoading } from '../redux/loaderSlice';
 import { getCurrentUser } from '../apicalls/user';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { setUser } from '../redux/userSlice';
 import { Layout, Menu, message } from 'antd';
 import { Header } from 'antd/es/layout/layout';
@@ -73,7 +73,7 @@ function ProtectedRoute({ children }) {
       children: [
         {
           label: (
-            <span onClick={() => {user.isAdmin? navigate('/admin'): navigate('/profile')}}>
+            <span onClick={() => {user.isAdmin? navigate('/admin-profile'): navigate('/profile')}}>
              My Profile 
             </span>
           ),
@@ -88,9 +88,15 @@ function ProtectedRoute({ children }) {
   ];
 
   useEffect(() => {
-    console.log("ProtectedRoute mounted, calling getValidUser");
-    getValidUser();
-  }, [navigate]);
+    console.log("ProtectedRoute mounted, checking user state");
+    // Only fetch user data if we don't have a user in Redux store
+    if (!user) {
+      console.log("No user in Redux store, calling getValidUser");
+      getValidUser();
+    } else {
+      console.log("User already exists in Redux store:", user);
+    }
+  }, []);
 
   if (!user) {
     console.log("No user found, not rendering children");

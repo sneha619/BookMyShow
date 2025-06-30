@@ -2,9 +2,12 @@ import { Button, Form, Input, message } from "antd";
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LoginUser } from "../apicalls/user";
+import { useDispatch } from "react-redux";
+import { setUser } from "../redux/userSlice";
 
 function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const sumbitForm = async (values) => {
     
@@ -15,8 +18,12 @@ function Login() {
         message.success("Logged in successfully");
 
         localStorage.setItem('token', res.token);
-
-        window.location.href = '/'
+        
+        // Set user in Redux store
+        dispatch(setUser(res.user));
+        
+        // Use navigate instead of window.location to prevent full page reload
+        navigate('/')
       } else {
         throw new Error(res.message || "Login failed");
       }

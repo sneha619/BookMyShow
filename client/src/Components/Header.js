@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Dropdown, Button, Input, Avatar, Space, Drawer, Typography, Badge } from 'antd';
-import { UserOutlined, SearchOutlined, MenuOutlined, LogoutOutlined, DashboardOutlined, UserSwitchOutlined, HomeOutlined, TagOutlined, ProfileOutlined, SettingOutlined, BellOutlined } from '@ant-design/icons';
+import { UserOutlined, SearchOutlined, MenuOutlined, LogoutOutlined, DashboardOutlined, UserSwitchOutlined, HomeOutlined, TagOutlined, ProfileOutlined, SettingOutlined, BellOutlined, VideoCameraOutlined, ShopOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../redux/userSlice.js';
@@ -13,8 +13,17 @@ function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { user } = useSelector(state => state?.users?.user ? state.users : { user: null });
+  const { user } = useSelector(state => state.user);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  
+  // Debug logging
+  console.log('Header - User:', user);
+  console.log('Header - User isAdmin:', user?.isAdmin);
+  
+  // If we're on the login or register page, don't show the header
+  if (location.pathname === '/login' || location.pathname === '/register') {
+    return null;
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -22,11 +31,7 @@ function Header() {
     navigate('/login');
   };
 
-  const handleSearch = (value) => {
-    if (value.trim()) {
-      navigate(`/?search=${encodeURIComponent(value.trim())}`);
-    }
-  };
+
 
   const userMenuItems = [
     {
@@ -41,12 +46,7 @@ function Header() {
       label: 'My Bookings',
       onClick: () => navigate('/profile')
     },
-    ...(user?.isAdmin ? [{
-      key: 'admin',
-      icon: <SettingOutlined />,
-      label: 'Admin Dashboard',
-      onClick: () => navigate('/admin/dashboard')
-    }] : []),
+
     {
       type: 'divider'
     },
@@ -62,7 +62,10 @@ function Header() {
     { key: '/', label: 'Movies', path: '/' },
     { key: '/theaters', label: 'Theaters', path: '/theaters' },
     { key: '/events', label: 'Events', path: '/events' },
-    { key: '/sports', label: 'Sports', path: '/sports' }
+    { key: '/sports', label: 'Sports', path: '/sports' },
+    ...(user && user.isAdmin ? [
+      { key: '/admin/add-content', label: 'Add Content', path: '/admin/add-content', icon: <PlusOutlined /> }
+    ] : [])
   ];
 
   const mobileMenuItems = [
@@ -80,18 +83,13 @@ function Header() {
       label: 'My Profile',
       onClick: () => navigate('/profile')
     },
-    ...(user?.isAdmin ? [{
-      key: 'admin',
-      icon: <SettingOutlined />,
-      label: 'Admin Dashboard',
-      onClick: () => navigate('/admin/dashboard')
-    }] : []),
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: handleLogout
-    }
+
+    // {
+    //   key: 'logout',
+    //   icon: <LogoutOutlined />,
+    //   label: 'Logout',
+    //   onClick: handleLogout
+    // }
   ];
 
   const mobileMenu = (
@@ -139,7 +137,7 @@ function Header() {
         width: '100%'
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '20px' }}>
           <div 
             style={{ 
               cursor: 'pointer',
@@ -164,13 +162,13 @@ function Header() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: 1, justifyContent: 'center' }}>
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: 1, justifyContent: 'flex-start', marginLeft: '40px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             {navigationItems.map(item => (
               <Button
                 key={item.key}
                 type="text"
-                icon={item.key === '/' ? <HomeOutlined /> : undefined}
+                icon={item.key === '/' ? <HomeOutlined /> : item.icon}
                 style={{
                   color: location.pathname === item.path ? '#ff6b6b' : 'rgba(255,255,255,0.8)',
                   fontWeight: location.pathname === item.path ? 'bold' : 'normal',
@@ -185,60 +183,52 @@ function Header() {
                 {item.label}
               </Button>
             ))}
-            
-            <Search
-              placeholder="Search for movies, theaters..."
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              style={{ 
-                maxWidth: '400px', 
-                width: '100%',
-              }}
-              onSearch={handleSearch}
-            />
           </div>
         </div>
 
-        {/* User Menu */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Button 
-            type="text" 
-            icon={<TagOutlined />} 
-            style={{ 
-              color: 'rgba(255,255,255,0.8)', 
-              border: 'none',
-              fontSize: '14px',
-              height: '40px'
-            }}
-            onClick={() => navigate('/profile')}
-          >
-            My Bookings
-          </Button>
-          
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-            <Button 
-              type="text" 
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                padding: '8px 16px',
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '20px',
-                color: 'white',
-                height: '40px'
-              }}
-            >
-              <Avatar 
-                size="small" 
-                icon={<UserOutlined />} 
-                style={{ backgroundColor: '#ff6b6b' }}
-              />
-              <Text style={{ color: 'white', fontSize: '14px' }}>{user?.name || 'User'}</Text>
-            </Button>
-          </Dropdown>
+        {/* User Menu or Login/Register */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto', marginRight: '20px' }}>
+          {user ? (
+            <>
+              <Button 
+                type="text" 
+                icon={<TagOutlined />} 
+                style={{ 
+                  color: 'rgba(255,255,255,0.8)', 
+                  border: 'none',
+                  fontSize: '14px',
+                  height: '40px'
+                }}
+                onClick={() => navigate('/profile')}
+              >
+                My Bookings
+              </Button>
+              
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+                <Button 
+                  type="text" 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    padding: '8px 16px',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '20px',
+                    color: 'white',
+                    height: '40px'
+                  }}
+                >
+                  <Avatar 
+                    size="small" 
+                    icon={<UserOutlined />} 
+                    style={{ backgroundColor: '#ff6b6b' }}
+                  />
+                  <Text style={{ color: 'white', fontSize: '14px' }}>{user.name}</Text>
+                </Button>
+              </Dropdown>
+            </>
+          ) : null}
 
           {/* Mobile Menu Button */}
           <Button
@@ -285,80 +275,125 @@ function Header() {
         }}
       >
         <div>
-          {/* User Info */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '16px',
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: '12px',
-            marginBottom: '24px'
-          }}>
-            <Avatar 
-              size={48} 
-              icon={<UserOutlined />} 
-              style={{ backgroundColor: '#ff6b6b' }}
-            />
-            <div>
-              <Text style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', display: 'block' }}>
-                {user?.name || 'User'}
-              </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
-                {user?.email || 'No email provided'}
-              </Text>
-            </div>
-          </div>
-          
-          <Search
-            placeholder="Search movies..."
-            allowClear
-            enterButton
-            style={{ marginBottom: '24px' }}
-            onSearch={handleSearch}
-          />
-          
-          <Menu 
-            mode="vertical" 
-            style={{ 
-              border: 'none',
-              background: 'transparent'
-            }}
-            theme="dark"
-          >
-            <Menu.Item key="home" icon={<HomeOutlined />}>
-              <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/')}>Movies</span>
-            </Menu.Item>
-            
-            <Menu.Item key="profile" icon={<UserOutlined />}>
-              <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Profile</span>
-            </Menu.Item>
-            
-            <Menu.Item key="bookings" icon={<TagOutlined />}>
-              <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Bookings</span>
-            </Menu.Item>
-            
-            {user?.isAdmin && (
-              <Menu.Item key="admin" icon={<DashboardOutlined />}>
-                <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</span>
-              </Menu.Item>
-            )}
-            
-            <Menu.Divider style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
-            
-            <Menu.Item 
-              key="logout" 
-              icon={<LogoutOutlined />} 
-              onClick={handleLogout}
-              style={{ color: '#ff6b6b' }}
-            >
-              Logout
-            </Menu.Item>
-          </Menu>
+          {user ? (
+            <>
+              {/* User Info */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '16px',
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: '12px',
+                marginBottom: '24px'
+              }}>
+                <Avatar 
+                  size={48} 
+                  icon={<UserOutlined />} 
+                  style={{ backgroundColor: '#ff6b6b' }}
+                />
+                <div>
+                  <Text style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', display: 'block' }}>
+                    {user.name}
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+                    {user.email || 'No email provided'}
+                  </Text>
+                </div>
+              </div>
+              
+              <Menu 
+                mode="vertical" 
+                style={{ 
+                  border: 'none',
+                  background: 'transparent'
+                }}
+                theme="dark"
+              >
+                {navigationItems.map(item => (
+                   <Menu.Item key={item.key} icon={item.key === '/' ? <HomeOutlined /> : item.icon}>
+                     <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate(item.path)}>{item.label}</span>
+                   </Menu.Item>
+                 ))}
+                
+                <Menu.Item key="profile" icon={<UserOutlined />}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Profile</span>
+                </Menu.Item>
+                
+                <Menu.Item key="bookings" icon={<TagOutlined />}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Bookings</span>
+                </Menu.Item>
+                
+
+                
+                <Menu.Divider style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
+                
+                <Menu.Item 
+                  key="logout" 
+                  icon={<LogoutOutlined />} 
+                  onClick={handleLogout}
+                  style={{ color: '#ff6b6b' }}
+                >
+                  Logout
+                </Menu.Item>
+              </Menu>
+            </>
+          ) : (
+            <>
+              <div style={{ padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+                <Text style={{ color: 'white', fontSize: '16px', marginBottom: '16px', display: 'block' }}>
+                  Sign in to access your account
+                </Text>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Button 
+                    type="primary" 
+                    block
+                    size="large"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      height: '44px',
+                      marginBottom: '12px'
+                    }}
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button 
+                    block
+                    size="large"
+                    style={{ 
+                      borderRadius: '8px',
+                      height: '44px',
+                      borderColor: 'rgba(255,255,255,0.3)',
+                      color: 'white'
+                    }}
+                    onClick={() => navigate('/register')}
+                  >
+                    Register
+                  </Button>
+                </Space>
+              </div>
+              
+              <Menu 
+                mode="vertical" 
+                style={{ 
+                  border: 'none',
+                  background: 'transparent'
+                }}
+                theme="dark"
+              >
+                <Menu.Item key="home" icon={<HomeOutlined />}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/')}>Movies</span>
+                </Menu.Item>
+              </Menu>
+            </>
+          )}
         </div>
       </Drawer>
 
-      <style jsx>{`
+      <style jsx="true">{`
         @media (max-width: 768px) {
           .desktop-nav {
             display: none !important;
