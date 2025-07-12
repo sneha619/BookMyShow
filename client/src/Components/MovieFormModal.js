@@ -10,9 +10,9 @@ function MovieFormModal({
   visible, 
   onCancel, 
   editingMovie, 
-  onSuccess,
-  form 
+  onSuccess
 }) {
+  const [form] = Form.useForm();
   const genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Romance', 'Thriller', 'Sci-Fi', 'Adventure', 'Animation', 'Documentary'];
   const languages = ['English', 'Hindi', 'Tamil', 'Telugu', 'Malayalam', 'Kannada', 'Bengali', 'Marathi', 'Gujarati', 'Punjabi'];
 

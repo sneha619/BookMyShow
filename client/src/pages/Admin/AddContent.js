@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Card, Tabs, Typography, Space, Divider } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Tabs, Typography, Space, Divider, message } from 'antd';
 import { VideoCameraOutlined, ShopOutlined, PlusOutlined } from '@ant-design/icons';
 import MovieFormModal from '../../Components/MovieFormModal';
 import TheaterFormModal from '../../Components/TheaterFormModal';
+import useAuth from '../../hooks/useAuth';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -10,15 +11,27 @@ const { TabPane } = Tabs;
 function AddContent() {
   const [movieModalVisible, setMovieModalVisible] = useState(false);
   const [theaterModalVisible, setTheaterModalVisible] = useState(false);
+  const { localUser, fetchUserData } = useAuth();
+
+  // Verify user authentication and admin status
+  useEffect(() => {
+    const verifyAdmin = async () => {
+      const result = await fetchUserData();
+      if (!result || !localUser?.isAdmin) {
+        message.error('You must be logged in as an admin to access this page');
+      }
+    };
+    verifyAdmin();
+  }, [fetchUserData, localUser]);
 
   const handleMovieSuccess = () => {
     setMovieModalVisible(false);
-    // You can add success notification here
+    message.success('Movie added successfully!');
   };
 
   const handleTheaterSuccess = () => {
     setTheaterModalVisible(false);
-    // You can add success notification here
+    message.success('Theater added successfully!');
   };
 
   return (

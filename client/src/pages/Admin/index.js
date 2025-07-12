@@ -1,6 +1,7 @@
 import React from 'react';
-import { Tabs } from 'antd';
+import { Tabs, Button } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { PlusOutlined } from '@ant-design/icons';
 import Dashboard from './Dashboard';
 import MoviesList from './MoviesList';
 import TheatersList from './TheatersList';
@@ -54,7 +55,20 @@ function Admin() {
 
   return (
     <div className="admin-container" style={{ padding: '20px' }}>
-      <h1 style={{ marginBottom: '20px' }}>Admin Panel</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 style={{ margin: 0 }}>Admin Panel</h1>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={() => navigate('/admin/add-content')}
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none'
+          }}
+        >
+          Add Content
+        </Button>
+      </div>
       <Tabs 
         activeKey={activeKey} 
         onChange={onChange} 

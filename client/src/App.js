@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Layout } from 'antd';
 import Home from './pages/Home';
 import Register from './pages/Register';
@@ -13,51 +13,42 @@ import MoviesList from './pages/Admin/MoviesList';
 import TheatersList from './pages/Admin/TheatersList';
 import AddContent from './pages/Admin/AddContent';
 import Header from './Components/Header';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import ProtectedRoute from './Components/ProtectedRoute';
 import AdminProtectedRoute from './pages/Admin/AdminProtectedRoute'
 import Admin from './pages/Admin';
 import { useEffect } from 'react';
-import { getCurrentUser } from './apicalls/user';
-import { setUser } from './redux/userSlice';
-import { showLoading, hideLoading } from './redux/loaderSlice';
+import ErrorBoundary from './Components/ErrorBoundary';
+import useAuth from './hooks/useAuth';
 
 
 function App() {
   const { loading } = useSelector((state) => state.loader);
-  const { user } = useSelector((state)=> state.user);
-  const dispatch = useDispatch();
+  const { localUser, isLoading, fetchUserData } = useAuth();
 
-  const getValidUser = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        return;
-      }
-
-      dispatch(showLoading());
-      const response = await getCurrentUser();
-
-      if (response.success && response.data) {
-        dispatch(setUser(response.data));
-      } else {
-        localStorage.removeItem("token");
-        dispatch(setUser(null));
-      }
-    } catch (error) {
-      console.log("Error fetching user data", error.message);
-      localStorage.removeItem("token");
-      dispatch(setUser(null));
-    } finally {
-      dispatch(hideLoading());
-    }
-  };
-
+  // Fetch user data only once on component mount
   useEffect(() => {
-    getValidUser();
-  }, []);
+    console.log("App - Component mounted, initializing user state");
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        fetchUserData().catch(error => {
+          console.error("Failed to fetch user data:", error);
+          // Handle the error gracefully without crashing the app
+        });
+      } catch (error) {
+        console.error("Error in fetchUserData:", error);
+        // Handle any synchronous errors
+      }
+    }
+  }, [fetchUserData]); // Include fetchUserData in dependencies
+  
+  // Debug user state changes
+  useEffect(() => {
+    console.log("App - User state changed:", localUser);
+  }, [localUser]);
 
   return (
     <div>
@@ -72,7 +63,7 @@ function App() {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.4.5)', 
+            backgroundColor: 'rgba(255, 255, 255, 0.45)', 
             zIndex: 1000,
           }}
         >
@@ -89,7 +80,7 @@ function App() {
         </div>
       )}
 
-      <BrowserRouter>
+      <ErrorBoundary>
         <Header />
         <Layout.Content style={{ minHeight: 'calc(100vh - 64px)', padding: '20px' }}>
           <Routes>
@@ -104,11 +95,11 @@ function App() {
             <Route path='/admin/add-content' element={<ProtectedRoute><AdminProtectedRoute><AddContent/></AdminProtectedRoute></ProtectedRoute>}/>
             <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
             <Route path='/admin-profile' element={<ProtectedRoute><AdminProtectedRoute><AdminProfile/></AdminProtectedRoute></ProtectedRoute>}/>
-            <Route path='/movie/:id' element={<MovieDetails />} />
-            <Route path='/book-show/:id' element={<ProtectedRoute><BookShow /></ProtectedRoute>} />
+            <Route path='/movie/:id' element={<ErrorBoundary><MovieDetails /></ErrorBoundary>} />
+            <Route path='/book-show/:id' element={<ProtectedRoute><ErrorBoundary><BookShow /></ErrorBoundary></ProtectedRoute>} />
           </Routes>
         </Layout.Content>
-      </BrowserRouter>
+      </ErrorBoundary>
     </div>
   );
 }

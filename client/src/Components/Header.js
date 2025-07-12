@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Layout, Menu, Dropdown, Button, Input, Avatar, Space, Drawer, Typography, Badge } from 'antd';
-import { UserOutlined, SearchOutlined, MenuOutlined, LogoutOutlined, DashboardOutlined, UserSwitchOutlined, HomeOutlined, TagOutlined, ProfileOutlined, SettingOutlined, BellOutlined, VideoCameraOutlined, ShopOutlined, PlusOutlined } from '@ant-design/icons';
+import { UserOutlined, SearchOutlined, MenuOutlined, LogoutOutlined, HomeOutlined, TagOutlined, ProfileOutlined, SettingOutlined, BellOutlined, VideoCameraOutlined, ShopOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../redux/userSlice.js';
@@ -16,24 +16,26 @@ function Header() {
   const { user } = useSelector(state => state.user);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   
-  // Debug logging
-  console.log('Header - User:', user);
-  console.log('Header - User isAdmin:', user?.isAdmin);
+  // Use Redux user directly instead of local state to prevent sync issues
+  const localUser = user;
   
-  // If we're on the login or register page, don't show the header
-  if (location.pathname === '/login' || location.pathname === '/register') {
-    return null;
-  }
+  // Debug logging when user changes
+  useEffect(() => {
+    if (user) {
+      console.log('Header - User updated from Redux:', user);
+      console.log('Header - User isAdmin:', user?.isAdmin);
+    } else {
+      console.log('Header - No user in Redux state');
+    }
+  }, [user]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     dispatch(setUser(null));
     navigate('/login');
-  };
+  }, [dispatch, navigate]);
 
-
-
-  const userMenuItems = [
+  const userMenuItems = useMemo(() => [
     {
       key: 'profile',
       icon: <ProfileOutlined />,
@@ -46,7 +48,6 @@ function Header() {
       label: 'My Bookings',
       onClick: () => navigate('/profile')
     },
-
     {
       type: 'divider'
     },
@@ -56,63 +57,31 @@ function Header() {
       label: 'Logout',
       onClick: handleLogout
     }
-  ];
+  ], [navigate, handleLogout]);
 
-  const navigationItems = [
-    { key: '/', label: 'Movies', path: '/' },
-    { key: '/theaters', label: 'Theaters', path: '/theaters' },
-    { key: '/events', label: 'Events', path: '/events' },
-    { key: '/sports', label: 'Sports', path: '/sports' },
-    ...(user && user.isAdmin ? [
-      { key: '/admin/add-content', label: 'Add Content', path: '/admin/add-content', icon: <PlusOutlined /> }
-    ] : [])
-  ];
-
-  const mobileMenuItems = [
-    ...navigationItems.map(item => ({
-      key: item.key,
-      label: item.label,
-      onClick: () => navigate(item.path)
-    })),
-    {
-      type: 'divider'
-    },
-    {
-      key: 'profile',
-      icon: <ProfileOutlined />,
-      label: 'My Profile',
-      onClick: () => navigate('/profile')
-    },
-
-    // {
-    //   key: 'logout',
-    //   icon: <LogoutOutlined />,
-    //   label: 'Logout',
-    //   onClick: handleLogout
-    // }
-  ];
-
-  const mobileMenu = (
-    <Menu>
-      {navigationItems.map(item => (
-        <Menu.Item key={item.key} onClick={() => navigate(item.path)}>
-          {item.label}
-        </Menu.Item>
-      ))}
-      <Menu.Divider />
-      <Menu.Item key="profile" icon={<ProfileOutlined />} onClick={() => navigate('/profile')}>
-        My Profile
-      </Menu.Item>
-      {user?.isAdmin && (
-        <Menu.Item key="admin" icon={<SettingOutlined />} onClick={() => navigate('/admin/dashboard')}>
-          Admin Dashboard
-        </Menu.Item>
-      )}
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
-        Logout
-      </Menu.Item>
-    </Menu>
-  );
+  const navigationItems = useMemo(() => {
+    const baseItems = [
+      { key: '/', label: 'Movies', path: '/' },
+      { key: '/theaters', label: 'Theaters', path: '/theaters' },
+      { key: '/events', label: 'Events', path: '/events' },
+      { key: '/sports', label: 'Sports', path: '/sports' }
+    ];
+    
+    // Only add admin items if user is logged in and is an admin
+    if (localUser && localUser.isAdmin) {
+      return [
+        ...baseItems,
+        { key: '/admin/add-content', label: 'Add Content', path: '/admin/add-content', icon: <PlusOutlined /> }
+      ];
+    }
+    
+    return baseItems;
+  }, [localUser]);
+  
+  // If we're on the login or register page, don't show the header
+  if (location.pathname === '/login' || location.pathname === '/register') {
+    return null;
+  }
 
   return (
     <AntHeader style={{
@@ -188,7 +157,7 @@ function Header() {
 
         {/* User Menu or Login/Register */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto', marginRight: '20px' }}>
-          {user ? (
+          {localUser ? (
             <>
               <Button 
                 type="text" 
@@ -224,11 +193,38 @@ function Header() {
                     icon={<UserOutlined />} 
                     style={{ backgroundColor: '#ff6b6b' }}
                   />
-                  <Text style={{ color: 'white', fontSize: '14px' }}>{user.name}</Text>
+                  <Text style={{ color: 'white', fontSize: '14px' }}>{localUser.name}</Text>
                 </Button>
               </Dropdown>
             </>
-          ) : null}
+          ) : (
+            <>
+              <Button 
+                type="text" 
+                style={{ 
+                  color: 'rgba(255,255,255,0.8)', 
+                  border: 'none',
+                  fontSize: '14px',
+                  height: '40px'
+                }}
+                onClick={() => navigate('/login')}
+              >
+                Login
+              </Button>
+              <Button 
+                type="primary" 
+                style={{ 
+                  background: 'linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)',
+                  border: 'none',
+                  borderRadius: '20px',
+                  height: '40px'
+                }}
+                onClick={() => navigate('/register')}
+              >
+                Register
+              </Button>
+            </>
+          )}
 
           {/* Mobile Menu Button */}
           <Button
@@ -275,7 +271,7 @@ function Header() {
         }}
       >
         <div>
-          {user ? (
+          {localUser ? (
             <>
               {/* User Info */}
               <div style={{
@@ -294,10 +290,10 @@ function Header() {
                 />
                 <div>
                   <Text style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', display: 'block' }}>
-                    {user.name}
+                    {localUser.name}
                   </Text>
                   <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
-                    {user.email || 'No email provided'}
+                    {localUser.email || 'No email provided'}
                   </Text>
                 </div>
               </div>
@@ -311,20 +307,18 @@ function Header() {
                 theme="dark"
               >
                 {navigationItems.map(item => (
-                   <Menu.Item key={item.key} icon={item.key === '/' ? <HomeOutlined /> : item.icon}>
-                     <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate(item.path)}>{item.label}</span>
+                   <Menu.Item key={item.key} icon={item.key === '/' ? <HomeOutlined /> : item.icon} onClick={() => navigate(item.path)}>
+                     <span style={{ color: 'rgba(255,255,255,0.8)' }}>{item.label}</span>
                    </Menu.Item>
                  ))}
                 
-                <Menu.Item key="profile" icon={<UserOutlined />}>
-                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Profile</span>
+                <Menu.Item key="profile" icon={<UserOutlined />} onClick={() => navigate('/profile')}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>My Profile</span>
                 </Menu.Item>
                 
-                <Menu.Item key="bookings" icon={<TagOutlined />}>
-                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/profile')}>My Bookings</span>
+                <Menu.Item key="bookings" icon={<TagOutlined />} onClick={() => navigate('/profile')}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>My Bookings</span>
                 </Menu.Item>
-                
-
                 
                 <Menu.Divider style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
                 
@@ -384,8 +378,8 @@ function Header() {
                 }}
                 theme="dark"
               >
-                <Menu.Item key="home" icon={<HomeOutlined />}>
-                  <span style={{ color: 'rgba(255,255,255,0.8)' }} onClick={() => navigate('/')}>Movies</span>
+                <Menu.Item key="home" icon={<HomeOutlined />} onClick={() => navigate('/')}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>Movies</span>
                 </Menu.Item>
               </Menu>
             </>
@@ -415,4 +409,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default React.memo(Header);

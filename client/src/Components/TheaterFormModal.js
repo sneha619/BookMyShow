@@ -5,10 +5,9 @@ import { addTheater, updateTheater } from '../apicalls/theaters';
 const { Option } = Select;
 const { TextArea } = Input;
 
-function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater, form }) {
+function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater }) {
   const [loading, setLoading] = useState(false);
-  const [theaterForm] = Form.useForm();
-  const formInstance = form || theaterForm;
+  const [form] = Form.useForm();
 
   const handleSubmit = async (values) => {
     try {
@@ -23,7 +22,7 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater, form }
       
       if (response.success) {
         message.success(editingTheater ? 'Theater updated successfully!' : 'Theater added successfully!');
-        formInstance.resetFields();
+        form.resetFields();
         onSuccess();
       } else {
         message.error(response.message || 'Something went wrong');
@@ -37,14 +36,14 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater, form }
   };
 
   const handleCancel = () => {
-    formInstance.resetFields();
+    form.resetFields();
     onCancel();
   };
 
   // Set form values when editing
   React.useEffect(() => {
     if (editingTheater && visible) {
-      formInstance.setFieldsValue({
+      form.setFieldsValue({
         name: editingTheater.name,
         address: editingTheater.address,
         city: editingTheater.city,
@@ -57,9 +56,9 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater, form }
         description: editingTheater.description
       });
     } else if (!editingTheater && visible) {
-      formInstance.resetFields();
+      form.resetFields();
     }
-  }, [editingTheater, visible, formInstance]);
+  }, [editingTheater, visible, form]);
 
   return (
     <Modal
@@ -71,7 +70,7 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater, form }
       destroyOnClose
     >
       <Form
-        form={formInstance}
+        form={form}
         layout="vertical"
         onFinish={handleSubmit}
         style={{ marginTop: '20px' }}
