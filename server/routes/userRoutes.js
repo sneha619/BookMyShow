@@ -74,8 +74,8 @@ router.post("/login", async (req, res) => {
 
 router.get("/get-current-user", authMiddlewares, async (req, res) => {
   try {
-    // Use req.user.userId instead of req.body.userId
-    const currentUser = await User.findById(req.user.userId).select('-password');
+    // Use req.user._id instead of req.user.userId
+    const currentUser = await User.findById(req.user._id).select('-password');
     console.log("Current User:", currentUser);
     
     if (!currentUser) {

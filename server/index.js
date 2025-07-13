@@ -14,6 +14,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Load models first to ensure they are registered
+require('./models/userModel');
+require('./models/theaterModel');
+require('./models/movieModel');
+require('./models/showModel');
+require('./models/bookingModel');
+
 const userRoutes = require('./routes/userRoutes.js');
 const movieRoutes = require('./routes/movieRoutes.js');
 const theaterRoutes = require('./routes/theaterRoutes.js');

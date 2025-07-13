@@ -25,7 +25,7 @@ module.exports = function (req, res, next) {
     console.log("Verified Token:", verifiedToken);
 
     // Attach userId to req.user
-    req.user = { userId: verifiedToken.userId };
+    req.user = { userId: verifiedToken.userId, _id: verifiedToken.userId };
 
     next(); // Proceed to the next middleware or route handler
   } catch (error) {

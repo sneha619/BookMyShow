@@ -11,6 +11,8 @@ import AdminProfile from './pages/AdminProfile';
 import AdminDashboard from './pages/Admin/Dashboard';
 import MoviesList from './pages/Admin/MoviesList';
 import TheatersList from './pages/Admin/TheatersList';
+import Theaters from './pages/Theaters';
+import TheaterDetails from './pages/TheaterDetails';
 import AddContent from './pages/Admin/AddContent';
 import Header from './Components/Header';
 import { useSelector } from 'react-redux';
@@ -43,7 +45,7 @@ function App() {
         // Handle any synchronous errors
       }
     }
-  }, [fetchUserData]); // Include fetchUserData in dependencies
+  }, []); // Remove fetchUserData from dependencies to prevent infinite loop
   
   // Debug user state changes
   useEffect(() => {
@@ -88,6 +90,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path='/theaters' element={<ErrorBoundary><Theaters /></ErrorBoundary>} />
             <Route path='/admin' element={<ProtectedRoute><AdminProtectedRoute><Admin/></AdminProtectedRoute></ProtectedRoute>}/>
             <Route path='/admin/dashboard' element={<ProtectedRoute><AdminProtectedRoute><Admin/></AdminProtectedRoute></ProtectedRoute>}/>
             <Route path='/admin/movies' element={<ProtectedRoute><AdminProtectedRoute><Admin/></AdminProtectedRoute></ProtectedRoute>}/>
@@ -96,6 +99,7 @@ function App() {
             <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
             <Route path='/admin-profile' element={<ProtectedRoute><AdminProtectedRoute><AdminProfile/></AdminProtectedRoute></ProtectedRoute>}/>
             <Route path='/movie/:id' element={<ErrorBoundary><MovieDetails /></ErrorBoundary>} />
+            <Route path='/theater/:id' element={<ErrorBoundary><TheaterDetails /></ErrorBoundary>} />
             <Route path='/book-show/:id' element={<ProtectedRoute><ErrorBoundary><BookShow /></ErrorBoundary></ProtectedRoute>} />
           </Routes>
         </Layout.Content>

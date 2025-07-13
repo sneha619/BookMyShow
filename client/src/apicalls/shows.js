@@ -73,3 +73,15 @@ export const getShowsByTheaterOwner = async () => {
         return error.response.data;
     }
 };
+
+// Get shows by theater ID
+export const getShowsByTheater = async (theaterId, filters = {}) => {
+    try {
+        const response = await axiosInstance.get(`/api/shows/get-shows-by-theater/${theaterId}`, {
+            params: filters
+        });
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+};

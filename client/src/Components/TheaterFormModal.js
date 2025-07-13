@@ -12,12 +12,29 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater }) {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      
+      // Properly structure the address object
+      const theaterData = {
+        ...values,
+        address: {
+          street: values.address,
+          city: values.city,
+          state: values.state,
+          pincode: values.pincode
+        }
+      };
+      
+      // Remove individual address fields to avoid duplication
+      delete theaterData.city;
+      delete theaterData.state;
+      delete theaterData.pincode;
+      
       let response;
       
       if (editingTheater) {
-        response = await updateTheater(editingTheater._id, values);
+        response = await updateTheater(editingTheater._id, theaterData);
       } else {
-        response = await addTheater(values);
+        response = await addTheater(theaterData);
       }
       
       if (response.success) {
@@ -45,10 +62,10 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater }) {
     if (editingTheater && visible) {
       form.setFieldsValue({
         name: editingTheater.name,
-        address: editingTheater.address,
-        city: editingTheater.city,
-        state: editingTheater.state,
-        pincode: editingTheater.pincode,
+        address: editingTheater.address?.street || '',
+        city: editingTheater.address?.city || '',
+        state: editingTheater.address?.state || '',
+        pincode: editingTheater.address?.pincode || '',
         phone: editingTheater.phone,
         email: editingTheater.email,
         capacity: editingTheater.capacity,
@@ -87,7 +104,13 @@ function TheaterFormModal({ visible, onCancel, onSuccess, editingTheater }) {
           <Form.Item
             label="Phone Number"
             name="phone"
-            rules={[{ required: true, message: 'Please enter phone number' }]}
+            rules={[
+              { required: true, message: 'Please enter phone number' },
+              {
+                pattern: /^\d{10}$/,
+                message: 'Phone number must be exactly 10 digits',
+              },
+            ]}
           >
             <Input placeholder="Enter phone number" />
           </Form.Item>

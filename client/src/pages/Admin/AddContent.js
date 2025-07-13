@@ -15,14 +15,27 @@ function AddContent() {
 
   // Verify user authentication and admin status
   useEffect(() => {
+    let isMounted = true;
+    
     const verifyAdmin = async () => {
-      const result = await fetchUserData();
-      if (!result || !localUser?.isAdmin) {
-        message.error('You must be logged in as an admin to access this page');
+      try {
+        const result = await fetchUserData();
+        // Only update state if component is still mounted
+        if (isMounted && (!result || !localUser?.isAdmin)) {
+          message.error('You must be logged in as an admin to access this page');
+        }
+      } catch (error) {
+        console.error('Error verifying admin status:', error);
       }
     };
+    
     verifyAdmin();
-  }, [fetchUserData, localUser]);
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, []);  // Empty dependency array to run only once
 
   const handleMovieSuccess = () => {
     setMovieModalVisible(false);
@@ -72,7 +85,7 @@ function AddContent() {
               border: 'none',
               borderRadius: '16px'
             }}
-            bodyStyle={{ 
+            bodyStyle={{
               display: 'flex', 
               flexDirection: 'column', 
               justifyContent: 'center',

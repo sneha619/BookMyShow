@@ -3,7 +3,7 @@ const router = express.Router();
 const Show = require('../models/showModel');
 const Theater = require('../models/theaterModel');
 const Movie = require('../models/movieModel');
-const authMiddlewares = require('../middlewares/authMiddlewares');
+const authMiddlewares = require('../Middlewares/authMiddlewares');
 
 // Get all shows with filters
 router.get('/get-all-shows', async (req, res) => {
@@ -287,6 +287,52 @@ router.get('/get-shows-by-theater-owner', authMiddlewares, async (req, res) => {
         .populate('movie', 'title poster')
         .populate('theater', 'name')
         .sort({ date: 1, time: 1 });
+        
+        res.send({
+            success: true,
+            data: shows
+        });
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// Get shows by theater ID
+router.get('/get-shows-by-theater/:theaterId', async (req, res) => {
+    try {
+        const { theaterId } = req.params;
+        const { date } = req.query;
+        
+        let filter = {
+            theater: theaterId,
+            isActive: true
+        };
+        
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(date);
+            endDate.setDate(endDate.getDate() + 1);
+            filter.date = {
+                $gte: startDate,
+                $lt: endDate
+            };
+        } else {
+            // Default to today and next 7 days
+            const today = new Date();
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            filter.date = {
+                $gte: today,
+                $lt: nextWeek
+            };
+        }
+        
+        const shows = await Show.find(filter)
+            .populate('movie', 'title poster duration genre language rating')
+            .sort({ date: 1, time: 1 });
         
         res.send({
             success: true,

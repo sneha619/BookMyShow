@@ -1,7 +1,7 @@
 /**
  * Service for theater-related API calls
  */
-import axiosInstance from '../apicalls';
+import { axiosInstance } from '../apicalls';
 
 /**
  * Get all theaters
@@ -9,7 +9,7 @@ import axiosInstance from '../apicalls';
  */
 export const getAllTheaters = async () => {
   try {
-    const response = await axiosInstance.get('/api/theater/get-all-theaters');
+    const response = await axiosInstance.get('/api/theaters/get-all-theaters');
     return {
       success: response.data.success,
       data: response.data.data,
@@ -30,7 +30,7 @@ export const getAllTheaters = async () => {
  */
 export const getTheaterById = async (id) => {
   try {
-    const response = await axiosInstance.get(`/api/theater/get-theater-by-id/${id}`);
+    const response = await axiosInstance.get(`/api/theaters/get-theater-by-id/${id}`);
     return {
       success: response.data.success,
       data: response.data.data,
@@ -51,7 +51,7 @@ export const getTheaterById = async (id) => {
  */
 export const addTheater = async (theaterData) => {
   try {
-    const response = await axiosInstance.post('/api/theater/add-theater', theaterData);
+    const response = await axiosInstance.post('/api/theaters/add-theater', theaterData);
     return {
       success: response.data.success,
       message: response.data.message,
@@ -74,7 +74,7 @@ export const addTheater = async (theaterData) => {
  */
 export const updateTheater = async (id, theaterData) => {
   try {
-    const response = await axiosInstance.put(`/api/theater/update-theater/${id}`, theaterData);
+    const response = await axiosInstance.put(`/api/theaters/update-theater/${id}`, theaterData);
     return {
       success: response.data.success,
       message: response.data.message,
@@ -96,7 +96,7 @@ export const updateTheater = async (id, theaterData) => {
  */
 export const deleteTheater = async (id) => {
   try {
-    const response = await axiosInstance.delete(`/api/theater/delete-theater/${id}`);
+    const response = await axiosInstance.delete(`/api/theaters/delete-theater/${id}`);
     return {
       success: response.data.success,
       message: response.data.message,
@@ -117,7 +117,7 @@ export const deleteTheater = async (id) => {
  */
 export const getShowsByTheater = async (theaterId) => {
   try {
-    const response = await axiosInstance.get(`/api/theater/get-shows-by-theater/${theaterId}`);
+    const response = await axiosInstance.get(`/api/theaters/get-shows-by-theater/${theaterId}`);
     return {
       success: response.data.success,
       data: response.data.data,

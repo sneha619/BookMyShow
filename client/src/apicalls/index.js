@@ -3,6 +3,7 @@ import { store } from '../redux/store';
 import { setUser } from '../redux/userSlice';
 
 export const axiosInstance = axios.create({
+    baseURL: 'http://localhost:10000',
     headers: {'Content-Type': 'application/json'}
 });
 

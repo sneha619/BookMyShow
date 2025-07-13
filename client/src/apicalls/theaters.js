@@ -3,12 +3,16 @@ import { axiosInstance } from './index';
 // Get all theaters
 export const getAllTheaters = async (filters = {}) => {
     try {
+        console.log('Making API request to get theaters with filters:', filters);
+        console.log('API URL:', axiosInstance.defaults.baseURL + '/api/theaters/get-all-theaters');
         const response = await axiosInstance.get('/api/theaters/get-all-theaters', {
             params: filters
         });
+        console.log('API response received:', response);
         return response.data;
     } catch (error) {
-        return error.response.data;
+        console.error('API error:', error);
+        return error.response?.data || { success: false, message: error.message };
     }
 };
 

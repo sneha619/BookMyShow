@@ -8,7 +8,7 @@ function ProtectedRoute({ children }) {
   useEffect(() => {
     console.log("ProtectedRoute mounted, checking user state");
     fetchUserData();
-  }, [fetchUserData]);
+  }, []); // Remove fetchUserData from dependency array to prevent infinite loop
 
   if (isLoading) {
     console.log("Loading user data, waiting...");
