@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Theater = require('../models/theaterModel');
-const authMiddlewares = require('../middlewares/authMiddlewares');
+const authMiddlewares = require('../Middlewares/authMiddlewares');
 
 // Get all theaters
 router.get('/get-all-theaters', async (req, res) => {
@@ -54,12 +54,12 @@ router.get('/get-theater-by-id/:id', async (req, res) => {
     }
 });
 
-// Add new theater (Theater owner only)
-router.post('/add-theater', authMiddlewares, async (req, res) => {
+// Add new theater (Anyone can add)
+router.post('/add-theater', async (req, res) => {
     try {
         const theaterData = {
-            ...req.body,
-            owner: req.user._id
+            ...req.body
+            // No owner assignment - anyone can add
         };
         
         const newTheater = new Theater(theaterData);
@@ -78,8 +78,8 @@ router.post('/add-theater', authMiddlewares, async (req, res) => {
     }
 });
 
-// Update theater (Owner only)
-router.put('/update-theater/:id', authMiddlewares, async (req, res) => {
+// Update theater (Anyone can update)
+router.put('/update-theater/:id', async (req, res) => {
     try {
         const theater = await Theater.findById(req.params.id);
         
@@ -90,13 +90,8 @@ router.put('/update-theater/:id', authMiddlewares, async (req, res) => {
             });
         }
         
-        // Check if user is the owner or admin
-        if (theater.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'You can only update your own theaters'
-            });
-        }
+        // No ownership check - anyone can update
+
         
         const updatedTheater = await Theater.findByIdAndUpdate(
             req.params.id,
@@ -117,8 +112,8 @@ router.put('/update-theater/:id', authMiddlewares, async (req, res) => {
     }
 });
 
-// Delete theater (Owner only)
-router.delete('/delete-theater/:id', authMiddlewares, async (req, res) => {
+// Delete theater (Anyone can delete)
+router.delete('/delete-theater/:id', async (req, res) => {
     try {
         const theater = await Theater.findById(req.params.id);
         
@@ -129,13 +124,8 @@ router.delete('/delete-theater/:id', authMiddlewares, async (req, res) => {
             });
         }
         
-        // Check if user is the owner or admin
-        if (theater.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'You can only delete your own theaters'
-            });
-        }
+        // No ownership check - anyone can delete
+
         
         await Theater.findByIdAndUpdate(
             req.params.id,

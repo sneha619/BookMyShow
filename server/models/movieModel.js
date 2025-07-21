@@ -51,7 +51,12 @@ const movieSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    }
+    },
+    theaters: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Theater',
+        required: true
+    }]
 }, { timestamps: true });
 
 const Movie = mongoose.model('Movie', movieSchema);

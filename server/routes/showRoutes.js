@@ -132,10 +132,10 @@ router.get('/get-show-by-id/:id', async (req, res) => {
     }
 });
 
-// Add new show (Theater owner only)
-router.post('/add-show', authMiddlewares, async (req, res) => {
+// Add new show (Anyone can add)
+router.post('/add-show', async (req, res) => {
     try {
-        // Verify theater ownership
+        // Verify theater exists
         const theater = await Theater.findById(req.body.theater);
         if (!theater) {
             return res.status(404).send({
@@ -144,19 +144,22 @@ router.post('/add-show', authMiddlewares, async (req, res) => {
             });
         }
         
-        if (theater.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'You can only add shows to your own theaters'
-            });
-        }
+        // No ownership check - anyone can add shows
         
-        // Verify movie exists
+        // Verify movie exists and is assigned to this theater
         const movie = await Movie.findById(req.body.movie);
         if (!movie) {
             return res.status(404).send({
                 success: false,
                 message: 'Movie not found'
+            });
+        }
+        
+        // Check if the movie is assigned to this theater
+        if (!movie.theaters.includes(req.body.theater)) {
+            return res.status(400).send({
+                success: false,
+                message: 'This movie is not assigned to the selected theater'
             });
         }
         
@@ -197,8 +200,8 @@ router.post('/add-show', authMiddlewares, async (req, res) => {
     }
 });
 
-// Update show (Theater owner only)
-router.put('/update-show/:id', authMiddlewares, async (req, res) => {
+// Update show (Anyone can update)
+router.put('/update-show/:id', async (req, res) => {
     try {
         const show = await Show.findById(req.params.id).populate('theater');
         
@@ -209,12 +212,26 @@ router.put('/update-show/:id', authMiddlewares, async (req, res) => {
             });
         }
         
-        // Check ownership
-        if (show.theater.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'You can only update shows in your own theaters'
-            });
+        // No ownership check - anyone can update shows
+
+        
+        // If movie is being changed, verify it exists and is assigned to this theater
+        if (req.body.movie && req.body.movie !== show.movie.toString()) {
+            const movie = await Movie.findById(req.body.movie);
+            if (!movie) {
+                return res.status(404).send({
+                    success: false,
+                    message: 'Movie not found'
+                });
+            }
+            
+            // Check if the movie is assigned to this theater
+            if (!movie.theaters.includes(show.theater._id.toString())) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'This movie is not assigned to the selected theater'
+                });
+            }
         }
         
         const updatedShow = await Show.findByIdAndUpdate(
@@ -236,8 +253,8 @@ router.put('/update-show/:id', authMiddlewares, async (req, res) => {
     }
 });
 
-// Delete show (Theater owner only)
-router.delete('/delete-show/:id', authMiddlewares, async (req, res) => {
+// Delete show (Anyone can delete)
+router.delete('/delete-show/:id', async (req, res) => {
     try {
         const show = await Show.findById(req.params.id).populate('theater');
         
@@ -248,13 +265,8 @@ router.delete('/delete-show/:id', authMiddlewares, async (req, res) => {
             });
         }
         
-        // Check ownership
-        if (show.theater.owner.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'You can only delete shows in your own theaters'
-            });
-        }
+        // No ownership check - anyone can delete shows
+
         
         await Show.findByIdAndUpdate(
             req.params.id,
@@ -274,10 +286,11 @@ router.delete('/delete-show/:id', authMiddlewares, async (req, res) => {
     }
 });
 
-// Get shows by theater owner
-router.get('/get-shows-by-theater-owner', authMiddlewares, async (req, res) => {
+// Get shows by theater owner (now accessible to anyone)
+router.get('/get-shows-by-theater-owner', async (req, res) => {
     try {
-        const theaters = await Theater.find({ owner: req.user._id });
+        // Since we removed auth, we'll return all theaters instead of filtering by owner
+        const theaters = await Theater.find({});
         const theaterIds = theaters.map(theater => theater._id);
         
         const shows = await Show.find({

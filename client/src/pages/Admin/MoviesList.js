@@ -43,7 +43,8 @@ function MoviesList() {
     form.setFieldsValue({
       ...movie,
       releaseDate: moment(movie.releaseDate),
-      cast: movie.cast.join(', ')
+      cast: movie.cast.join(', '),
+      theaters: movie.theaters?.map(theater => theater._id) || []
     });
     setModalVisible(true);
   };
@@ -136,6 +137,26 @@ function MoviesList() {
       dataIndex: 'rating',
       key: 'rating',
       render: (rating) => `${rating}/10`
+    },
+    {
+      title: 'Theaters',
+      dataIndex: 'theaters',
+      key: 'theaters',
+      render: (theaters) => (
+        <>
+          {theaters && theaters.length > 0 ? (
+            <div style={{ maxWidth: '200px', maxHeight: '80px', overflow: 'auto' }}>
+              {theaters.map(theater => (
+                <Tag key={theater._id} color="purple">
+                  {theater.name} - {theater.address?.city}
+                </Tag>
+              ))}
+            </div>
+          ) : (
+            <Tag color="red">No theaters assigned</Tag>
+          )}
+        </>
+      )
     },
     {
       title: 'Status',

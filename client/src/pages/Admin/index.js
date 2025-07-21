@@ -5,6 +5,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import Dashboard from './Dashboard';
 import MoviesList from './MoviesList';
 import TheatersList from './TheatersList';
+import ShowsList from './ShowsList';
 
 function Admin() {
   const navigate = useNavigate();
@@ -26,6 +27,11 @@ function Admin() {
       key: 'theaters',
       label: 'Theaters',
       children: <TheatersList />
+    },
+    {
+      key: 'shows',
+      label: 'Shows',
+      children: <ShowsList />
     }
   ];
 
@@ -35,6 +41,8 @@ function Admin() {
     activeKey = 'movies';
   } else if (pathname.includes('theaters')) {
     activeKey = 'theaters';
+  } else if (pathname.includes('shows')) {
+    activeKey = 'shows';
   }
 
   const onChange = (key) => {
@@ -47,6 +55,9 @@ function Admin() {
         break;
       case 'theaters':
         navigate('/admin/theaters');
+        break;
+      case 'shows':
+        navigate('/admin/shows');
         break;
       default:
         navigate('/admin');

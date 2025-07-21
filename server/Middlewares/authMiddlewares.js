@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
 
 module.exports = function (req, res, next) {
   // Check if the authorization header is present
@@ -27,7 +28,18 @@ module.exports = function (req, res, next) {
     // Attach userId to req.user
     req.user = { userId: verifiedToken.userId, _id: verifiedToken.userId };
 
-    next(); // Proceed to the next middleware or route handler
+    // Fetch the complete user data to get isAdmin status
+    User.findById(verifiedToken.userId)
+      .then(user => {
+        if (user) {
+          req.user.isAdmin = user.isAdmin;
+        }
+        next(); // Proceed to the next middleware or route handler
+      })
+      .catch(err => {
+        console.error("Error fetching user data in middleware:", err);
+        next(); // Still proceed even if there's an error fetching user data
+      });
   } catch (error) {
     console.error("Token verification error:", error);
     res.status(401).send({

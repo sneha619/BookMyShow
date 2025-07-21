@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Movie = require('../models/movieModel');
-const authMiddlewares = require('../middlewares/authMiddlewares');
+// const authMiddlewares = require('../Middlewares/authMiddlewares');
 
 // Get all movies with filters
 router.get('/get-all-movies', async (req, res) => {
     try {
-        const { city, genre, language, search } = req.query;
+        const { city, genre, language, search, theaterId } = req.query;
         let filter = { isActive: true };
         
         if (genre) {
@@ -25,7 +25,25 @@ router.get('/get-all-movies', async (req, res) => {
             ];
         }
         
-        const movies = await Movie.find(filter).sort({ releaseDate: -1 });
+        // Filter by theater if provided
+        if (theaterId) {
+            filter.theaters = { $in: [theaterId] };
+        }
+        
+        // Filter by city if provided
+        if (city) {
+            // First find theaters in the specified city
+            const Theater = require('../models/theaterModel');
+            const theaterIds = await Theater.find({ 'address.city': city })
+                .distinct('_id');
+            
+            // Then find movies associated with those theaters
+            filter.theaters = { $in: theaterIds };
+        }
+        
+        const movies = await Movie.find(filter)
+            .populate('theaters', 'name address')
+            .sort({ releaseDate: -1 });
         
         res.send({
             success: true,
@@ -42,7 +60,8 @@ router.get('/get-all-movies', async (req, res) => {
 // Get movie by ID
 router.get('/get-movie-by-id/:id', async (req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findById(req.params.id)
+            .populate('theaters', 'name address');
         
         if (!movie) {
             return res.status(404).send({
@@ -63,14 +82,27 @@ router.get('/get-movie-by-id/:id', async (req, res) => {
     }
 });
 
-// Add new movie (Admin only)
-router.post('/add-movie', authMiddlewares, async (req, res) => {
+// Add new movie (Anyone can add)
+router.post('/add-movie', async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.user.isAdmin) {
-            return res.status(403).send({
+        
+        // Validate that theaters exist
+        const { theaters } = req.body;
+        if (!theaters || !theaters.length) {
+            return res.status(400).send({
                 success: false,
-                message: 'Only admins can add movies'
+                message: 'At least one theater must be selected'
+            });
+        }
+        
+        // Verify all theaters exist
+        const Theater = require('../models/theaterModel');
+        const theaterCount = await Theater.countDocuments({ _id: { $in: theaters } });
+        
+        if (theaterCount !== theaters.length) {
+            return res.status(400).send({
+                success: false,
+                message: 'One or more selected theaters do not exist'
             });
         }
         
@@ -90,22 +122,33 @@ router.post('/add-movie', authMiddlewares, async (req, res) => {
     }
 });
 
-// Update movie (Admin only)
-router.put('/update-movie/:id', authMiddlewares, async (req, res) => {
+// Update movie (Anyone can update)
+router.put('/update-movie/:id', async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'Only admins can update movies'
-            });
+        
+        // Validate that theaters exist if provided
+        const { theaters } = req.body;
+        if (theaters) {
+            if (!theaters.length) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'At least one theater must be selected'
+                });
+            }
+            
+            // Verify all theaters exist
+            const Theater = require('../models/theaterModel');
+            const theaterCount = await Theater.countDocuments({ _id: { $in: theaters } });
+            
+            if (theaterCount !== theaters.length) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'One or more selected theaters do not exist'
+                });
+            }
         }
         
-        const movie = await Movie.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        );
+        const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, { new: true });
         
         if (!movie) {
             return res.status(404).send({
@@ -127,16 +170,9 @@ router.put('/update-movie/:id', authMiddlewares, async (req, res) => {
     }
 });
 
-// Delete movie (Admin only)
-router.delete('/delete-movie/:id', authMiddlewares, async (req, res) => {
+// Delete movie (Anyone can delete)
+router.delete('/delete-movie/:id', async (req, res) => {
     try {
-        // Check if user is admin
-        if (!req.user.isAdmin) {
-            return res.status(403).send({
-                success: false,
-                message: 'Only admins can delete movies'
-            });
-        }
         
         const movie = await Movie.findByIdAndUpdate(
             req.params.id,

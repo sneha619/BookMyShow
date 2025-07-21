@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Row, Col, Card, Button, message, Spin, Tag, Divider, Typography, Space, List, Avatar } from 'antd';
-import { ShopOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, CalendarOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { ShopOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, CalendarOutlined, VideoCameraOutlined, PlusOutlined } from '@ant-design/icons';
 import { getTheaterById } from '../apicalls/theaters';
 import { getShowsByTheater } from '../apicalls/shows';
+import ShowFormModal from '../Components/ShowFormModal';
+import { useSelector } from 'react-redux';
 import moment from 'moment';
 
 const { Title, Text, Paragraph } = Typography;
@@ -14,6 +16,8 @@ function TheaterDetails() {
   const [theater, setTheater] = useState(null);
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showModalVisible, setShowModalVisible] = useState(false);
+  const { user } = useSelector(state => state.user);
 
   useEffect(() => {
     const fetchTheaterDetails = async () => {
@@ -106,7 +110,20 @@ function TheaterDetails() {
         </Col>
 
         <Col xs={24} md={16}>
-          <Card title="Current & Upcoming Shows">
+          <Card 
+            title="Current & Upcoming Shows"
+            extra={
+              user && (user.isAdmin || (theater && theater.owner && theater.owner._id === user._id)) && (
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />} 
+                  onClick={() => setShowModalVisible(true)}
+                >
+                  Add Show
+                </Button>
+              )
+            }
+          >
             {shows.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '20px' }}>
                 <Text>No shows currently scheduled at this theater</Text>
@@ -162,6 +179,25 @@ function TheaterDetails() {
           Back to All Theaters
         </Button>
       </div>
+
+      {/* Show Form Modal */}
+      {theater && (
+        <ShowFormModal
+          visible={showModalVisible}
+          onCancel={() => setShowModalVisible(false)}
+          onSuccess={() => {
+            setShowModalVisible(false);
+            // Refresh shows list
+            getShowsByTheater(id).then(response => {
+              if (response.success) {
+                setShows(response.data);
+                message.success('Show added successfully');
+              }
+            });
+          }}
+          defaultTheaterId={theater._id}
+        />
+      )}
     </div>
   );
 }

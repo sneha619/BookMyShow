@@ -145,7 +145,7 @@ export const announceToScreenReader = (message, politeness = 'polite') => {
     liveRegion.style.margin = '-1px';
     liveRegion.style.padding = '0';
     liveRegion.style.overflow = 'hidden';
-    liveRegion.style.clip = 'rect(0, 0, 0, 0)';
+    liveRegion.style.clipPath = 'inset(100%)';
     liveRegion.style.whiteSpace = 'nowrap';
     liveRegion.style.border = '0';
     document.body.appendChild(liveRegion);
